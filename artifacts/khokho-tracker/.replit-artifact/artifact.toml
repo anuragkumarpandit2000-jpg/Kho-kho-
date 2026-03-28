@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Kho-Kho Champion Tracker"
+version = "1.0.0"
+id = "artifacts/khokho-tracker"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18462
+
+[services.development]
+run = "pnpm --filter @workspace/khokho-tracker run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/khokho-tracker", "run", "build" ]
+publicDir = "artifacts/khokho-tracker/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18462"
+BASE_PATH = "/"

@@ -16,12 +16,28 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
+## Artifacts
+
+### `artifacts/khokho-tracker` — Kho-Kho Champion Tracker (React + Vite, frontend-only)
+
+A complete sports tracking app for Kho-Kho teams. All data stored in localStorage. Features:
+- **Dashboard**: Team stats, player rankings, top performer, Load Demo Data button
+- **Player Management**: Add/edit/delete players with role (Runner/Chaser), strength level, skills
+- **Speed Tracker**: Log 80m sprint times, interactive recharts line graph (30-day), insights (Improving/Stable/Needs Improvement)
+- **Training Logs**: Daily training entries, weekly summary, consistency score
+- **Match Analysis**: Match stats per player, auto-detect best/weak performers, smart suggestions
+- **Strategy Generator**: AI-logic based team formation, best chaser/runner recommendation, attack strategy
+- Dark/Light mode toggle, smooth framer-motion animations, fully responsive
+
+Tech: React, Vite, Tailwind, shadcn/ui, recharts, framer-motion, react-hook-form, zod, localStorage
+
 ## Structure
 
 ```text
 artifacts-monorepo/
 ├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
+│   ├── api-server/         # Express API server
+│   └── khokho-tracker/     # Kho-Kho Champion Tracker (react-vite, preview path: /)
 ├── lib/                    # Shared libraries
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks

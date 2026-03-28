@@ -1,0 +1,22 @@
+packages:
+  "recharts": "For rendering speed and training history charts"
+  "framer-motion": "For energetic page transitions and list animations"
+  "date-fns": "For formatting and manipulating dates in the tracker"
+  "uuid": "For generating unique IDs for local storage items"
+  "@types/uuid": "Types for uuid"
+  "lucide-react": "For sports and UI icons"
+  "clsx": "Utility for constructing className strings"
+  "tailwind-merge": "Utility for merging tailwind classes"
+
+images:
+  - path: "artifacts/khokho-tracker/public/images/hero-bg.png"
+    description: "Abstract energetic sports background with motion blur and neon orange streaks on dark textured surface, dynamic lighting"
+    aspect_ratio: "16:9"
+  - path: "artifacts/khokho-tracker/public/images/strategy-bg.png"
+    description: "Tactical dark sports field diagram background with subtle grid lines and strategic markings in faint orange and cyan"
+    aspect_ratio: "16:9"
+
+notes:
+  - Data is persisted entirely in localStorage.
+  - Mocked async delays added to TanStack Query hooks to simulate network latency and show loading states.
+  - Zod is used for runtime validation of localStorage data to ensure integrity.

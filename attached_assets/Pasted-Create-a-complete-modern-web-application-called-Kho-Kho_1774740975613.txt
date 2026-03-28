@@ -1,0 +1,134 @@
+Create a complete modern web application called "Kho-Kho Champion Tracker".
+
+Purpose:
+This app is designed for a kho-kho team to track player performance, analyze match data, improve training, and generate smart strategies to win championships.
+
+---
+
+CORE FEATURES:
+
+1. Player Management System:
+
+- Add, edit, delete players
+- Each player should have:
+  - Name
+  - Role (Runner / Chaser)
+  - Special Skill (user-defined)
+  - Strength level (1–10)
+  - Weakness notes
+
+---
+
+2. Speed Progress Tracker (MAIN FEATURE):
+
+- Input daily 80m running time (in seconds)
+- Track for 30 days per player
+- Store all entries persistently
+- Display a dynamic line graph (Day vs Time)
+- Highlight:
+  - Best time (lowest)
+  - Average time
+  - Improvement percentage
+- Show automatic insights:
+  - "Improving"
+  - "Stable"
+  - "Needs improvement"
+
+---
+
+3. Training Tracker:
+
+- Daily input:
+  - Running (minutes)
+  - Sprint rounds
+  - Practice duration
+- Show weekly summary
+- Show consistency score
+
+---
+
+4. Match Analysis System:
+
+- Record:
+  - Total outs
+  - Fouls committed
+  - Successful chases
+- Automatically detect:
+  - Best performer
+  - Weak player
+- Give suggestions like:
+  - "Reduce fouls"
+  - "Improve stamina"
+  - "Work on speed"
+
+---
+
+5. Strategy Generator (SMART AI LOGIC):
+   Based on player data:
+
+- Suggest:
+  - Best chaser
+  - Best runner
+  - Team formation
+  - Attack strategy (aggressive / balanced / defensive)
+- Example logic:
+  IF speed high AND stamina high → Chaser
+  IF agility high → Runner
+
+---
+
+6. Team Dashboard:
+
+- Show:
+  - Overall team progress
+  - Average speed
+  - Weekly improvements
+  - Player rankings
+- Clean and visual layout
+
+---
+
+7. Graph System:
+
+- Use interactive graphs
+- Show:
+  - Speed progress (30 days)
+  - Training consistency
+- Graph should auto-update on new data
+
+---
+
+DESIGN REQUIREMENTS:
+
+- Clean modern UI
+- Mobile-friendly (responsive design)
+- Dark mode + Light mode toggle
+- Smooth animations
+- Easy navigation
+
+---
+
+TECH STACK:
+
+- Frontend: HTML, CSS, JavaScript
+- Charts: Chart.js
+- Storage: LocalStorage (for now)
+- Code should be clean and beginner-friendly
+
+---
+
+EXTRA FEATURES:
+
+- Show motivational messages:
+  - "Great improvement!"
+  - "Keep pushing!"
+- Highlight top performer automatically
+- Add simple notifications for progress
+
+---
+
+OUTPUT FORMAT:
+
+- Provide full working code (HTML, CSS, JS)
+- Structure it clearly
+- Make it ready to run in browser
