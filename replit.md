@@ -18,6 +18,19 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 
 ## Artifacts
 
+### `artifacts/kho-team-tracker` — Kho-Kho Team Tracker (React + Vite + full-stack, previewPath: `/kho-team-tracker/`)
+
+Full-stack multi-user Kho-Kho team tracking app with Replit Auth and PostgreSQL. Features:
+- **Landing Page**: Animated hero, Sign In via Replit Auth
+- **Home**: Player dashboard after login
+- **Profile**: Set display name, role, special skill
+- **Training Log**: Daily training submission with form validation (react-hook-form + zod), history list
+- **Speed Tracker**: Submit 80m sprint times, recharts line graph of speed progress
+- **Coach Dashboard**: Team leaderboard, all players' training stats (coaches only — `isCoach: true` in DB)
+- Sidebar navigation, dark/light mode, framer-motion animations, Replit Auth login/logout
+
+Tech: React, Vite, Tailwind, shadcn/ui, recharts, framer-motion, react-hook-form, `@workspace/replit-auth-web`, `@workspace/api-client-react` (generated React Query hooks)
+
 ### `artifacts/khokho-tracker` — Kho-Kho Champion Tracker (React + Vite, frontend-only)
 
 A complete sports tracking app for Kho-Kho teams. All data stored in localStorage. Features:
@@ -42,7 +55,8 @@ artifacts-monorepo/
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
-│   └── db/                 # Drizzle ORM schema + DB connection
+│   ├── db/                 # Drizzle ORM schema + DB connection
+│   └── replit-auth-web/    # useAuth() hook for Replit Auth (web)
 ├── scripts/                # Utility scripts (single workspace package)
 │   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
 ├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)

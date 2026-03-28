@@ -1,22 +1,31 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Kho-Kho Team Tracker API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: Auth
+    description: Browser authentication endpoints.
+  - name: players
+    description: Player profile operations
+  - name: training
+    description: Daily training log operations
+  - name: speed
+    description: Speed tracking operations
+  - name: coach
+    description: Coach dashboard operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +33,356 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/user:
+    get:
+      tags: [Auth]
+      operationId: getCurrentAuthUser
+      summary: Get the currently authenticated user
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '200':
+          description: Auth status resolved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthUserEnvelope'
+
+  /login:
+    get:
+      tags: [Auth]
+      operationId: beginBrowserLogin
+      summary: Start the browser OIDC login flow
+      parameters:
+        - name: returnTo
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirect to the OIDC authorization endpoint.
+
+  /callback:
+    get:
+      tags: [Auth]
+      operationId: handleBrowserLoginCallback
+      summary: Complete the browser OIDC login flow
+      parameters:
+        - name: code
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: iss
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uri
+      responses:
+        '302':
+          description: Redirect after login.
+
+  /logout:
+    get:
+      tags: [Auth]
+      operationId: logoutBrowserSession
+      summary: Clear the session and begin OIDC logout
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - $ref: '#/components/parameters/SessionCookie'
+      responses:
+        '302':
+          description: Redirect to the OIDC provider logout URL.
+
+  /players/me:
+    get:
+      operationId: getMyProfile
+      tags: [players]
+      summary: Get current player's profile
+      responses:
+        '200':
+          description: Player profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '404':
+          description: Profile not found (first-time user)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+    patch:
+      operationId: updateMyProfile
+      tags: [players]
+      summary: Update current player's profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePlayerProfileBody'
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /training:
+    get:
+      operationId: getMyTrainingLogs
+      tags: [training]
+      summary: Get current player's training logs (last 30 days)
+      responses:
+        '200':
+          description: List of training logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrainingLog'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+    post:
+      operationId: submitTrainingLog
+      tags: [training]
+      summary: Submit today's training log
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitTrainingLogBody'
+      responses:
+        '201':
+          description: Training log submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingLog'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /speed:
+    get:
+      operationId: getMySpeedEntries
+      tags: [speed]
+      summary: Get current player's 80m sprint entries (last 30 days)
+      responses:
+        '200':
+          description: List of speed entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SpeedEntry'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+    post:
+      operationId: submitSpeedEntry
+      tags: [speed]
+      summary: Submit an 80m sprint time
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitSpeedEntryBody'
+      responses:
+        '201':
+          description: Speed entry submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpeedEntry'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /coach/players:
+    get:
+      operationId: getAllPlayers
+      tags: [coach]
+      summary: Get all player profiles (coach only)
+      responses:
+        '200':
+          description: List of all players with latest training
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlayerWithLatestTraining'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Forbidden - not a coach
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /coach/players/{playerId}/training:
+    get:
+      operationId: getPlayerTraining
+      tags: [coach]
+      summary: Get a specific player's training logs (coach only)
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Player training logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TrainingLog'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /coach/players/{playerId}/speed:
+    get:
+      operationId: getPlayerSpeed
+      tags: [coach]
+      summary: Get a specific player's speed entries (coach only)
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Player speed entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SpeedEntry'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
+  /coach/leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [coach]
+      summary: Get team leaderboard
+      responses:
+        '200':
+          description: Leaderboard data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Leaderboard'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+
 components:
+  parameters:
+    AuthorizationSessionHeader:
+      name: Authorization
+      in: header
+      required: false
+      description: Opaque session token — `Bearer <sid>`.
+      schema:
+        type: string
+    SessionCookie:
+      name: sid
+      in: cookie
+      required: false
+      description: Browser session cookie.
+      schema:
+        type: string
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +392,227 @@ components:
       required:
         - status
 
+    AuthUser:
+      type: object
+      required: [id, email, firstName, lastName, profileImageUrl]
+      properties:
+        id:
+          type: string
+        email:
+          type: [string, 'null']
+          format: email
+        firstName:
+          type: [string, 'null']
+        lastName:
+          type: [string, 'null']
+        profileImageUrl:
+          type: [string, 'null']
+
+    AuthUserEnvelope:
+      type: object
+      required: [user]
+      properties:
+        user:
+          oneOf:
+            - $ref: '#/components/schemas/AuthUser'
+            - type: 'null'
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    PlayerProfile:
+      type: object
+      required: [id, userId, displayName, role, specialSkill, isCoach, createdAt]
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [Runner, Chaser]
+        specialSkill:
+          type: string
+        isCoach:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    UpdatePlayerProfileBody:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 2
+        role:
+          type: string
+          enum: [Runner, Chaser]
+        specialSkill:
+          type: string
+
+    TrainingLog:
+      type: object
+      required: [id, playerId, date, runningMinutes, sprintRounds, skillPracticed, matchPlayed, foulsCommitted, energyLevel, sleepHours, createdAt]
+      properties:
+        id:
+          type: string
+        playerId:
+          type: string
+        date:
+          type: string
+          format: date
+        runningMinutes:
+          type: integer
+          minimum: 0
+        sprintRounds:
+          type: integer
+          minimum: 0
+        skillPracticed:
+          type: boolean
+        skillName:
+          type: [string, 'null']
+        matchPlayed:
+          type: boolean
+        foulsCommitted:
+          type: integer
+          minimum: 0
+        energyLevel:
+          type: integer
+          minimum: 1
+          maximum: 10
+        sleepHours:
+          type: number
+          minimum: 0
+        notes:
+          type: [string, 'null']
+        createdAt:
+          type: string
+          format: date-time
+
+    SubmitTrainingLogBody:
+      type: object
+      required: [date, runningMinutes, sprintRounds, skillPracticed, matchPlayed, foulsCommitted, energyLevel, sleepHours]
+      properties:
+        date:
+          type: string
+          format: date
+        runningMinutes:
+          type: integer
+          minimum: 0
+        sprintRounds:
+          type: integer
+          minimum: 0
+        skillPracticed:
+          type: boolean
+        skillName:
+          type: [string, 'null']
+        matchPlayed:
+          type: boolean
+        foulsCommitted:
+          type: integer
+          minimum: 0
+        energyLevel:
+          type: integer
+          minimum: 1
+          maximum: 10
+        sleepHours:
+          type: number
+          minimum: 0
+        notes:
+          type: [string, 'null']
+
+    SpeedEntry:
+      type: object
+      required: [id, playerId, date, timeInSeconds, createdAt]
+      properties:
+        id:
+          type: string
+        playerId:
+          type: string
+        date:
+          type: string
+          format: date
+        timeInSeconds:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    SubmitSpeedEntryBody:
+      type: object
+      required: [date, timeInSeconds]
+      properties:
+        date:
+          type: string
+          format: date
+        timeInSeconds:
+          type: number
+          minimum: 5
+          maximum: 60
+
+    PlayerWithLatestTraining:
+      type: object
+      required: [id, userId, displayName, role, specialSkill, isCoach, createdAt, lastTrainingDate, trainingStreakDays]
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+          enum: [Runner, Chaser]
+        specialSkill:
+          type: string
+        isCoach:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        lastTrainingDate:
+          type: [string, 'null']
+          format: date
+        trainingStreakDays:
+          type: integer
+        bestSpeedTime:
+          type: [number, 'null']
+        latestEnergyLevel:
+          type: [integer, 'null']
+
+    LeaderboardEntry:
+      type: object
+      required: [playerId, displayName, role, speedScore, consistencyScore, totalTrainingDays]
+      properties:
+        playerId:
+          type: string
+        displayName:
+          type: string
+        role:
+          type: string
+        speedScore:
+          type: [number, 'null']
+        consistencyScore:
+          type: number
+        totalTrainingDays:
+          type: integer
+
+    Leaderboard:
+      type: object
+      required: [speed, consistency]
+      properties:
+        speed:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+        consistency:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
