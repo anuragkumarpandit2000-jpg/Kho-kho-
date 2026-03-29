@@ -31,14 +31,15 @@ type SignupForm = z.infer<typeof signupSchema>;
 const BASE = import.meta.env.BASE_URL;
 
 async function apiPost(path: string, body: object) {
-  const res = await fetch(`${BASE}api/${path}`, {
+  const res = await fetch(`/api/${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify(body),
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Something went wrong");
+  let data: Record<string, unknown> = {};
+  try { data = await res.json(); } catch { /* empty response */ }
+  if (!res.ok) throw new Error((data.error as string) ?? "Something went wrong");
   return data;
 }
 
