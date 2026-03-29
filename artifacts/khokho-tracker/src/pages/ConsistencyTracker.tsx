@@ -4,7 +4,7 @@ import { db } from "@/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import type { DailyEntry } from "@/lib/points";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, CalendarDays, TrendingUp, CheckCircle, XCircle, Flame } from "lucide-react";
+import { Trophy, CalendarDays, TrendingUp, CheckCircle, XCircle, Flame, Shield } from "lucide-react";
 
 const YEAR = 2026;
 const MONTH = 4; // April
@@ -87,13 +87,17 @@ function DayBox({
   );
 }
 
-// ─── Player's own tracker ───────────────────────────────────────────────────
+// ─── Main page ──────────────────────────────────────────────────────────────
 
 export default function ConsistencyTracker() {
   const { user } = useAuth();
 
-  if (user?.isCoach) return <CoachView />;
-  return <PlayerView />;
+  return (
+    <div className="space-y-12">
+      <PlayerView />
+      {user?.isCoach && <CoachView />}
+    </div>
+  );
 }
 
 function PlayerView() {
@@ -333,11 +337,11 @@ function CoachView() {
 
   return (
     <div className="space-y-8 pb-10">
-      <div>
-        <h1 className="text-4xl font-black text-foreground flex items-center gap-3">
-          <CalendarDays className="text-primary" /> Players' April Trackers
-        </h1>
-        <p className="text-muted-foreground mt-2">Overview of all players' 30-day consistency for April 2026.</p>
+      <div className="border-t border-border/50 pt-8">
+        <h2 className="text-2xl font-black text-foreground flex items-center gap-3">
+          <Shield className="text-primary w-6 h-6" /> All Players' April Trackers
+        </h2>
+        <p className="text-muted-foreground mt-1 text-sm">Coach view — consistency rankings for all players.</p>
       </div>
 
       {playerData.length === 0 ? (
