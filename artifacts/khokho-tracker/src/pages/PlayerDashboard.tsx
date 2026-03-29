@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { analyzePlayer, generateSuggestions } from "@/lib/analysis";
@@ -19,12 +19,11 @@ export default function PlayerDashboard() {
     (async () => {
       const q = query(
         collection(db, "training"),
-        where("uid", "==", user.uid),
-        orderBy("date", "desc"),
-        limit(30)
+        where("uid", "==", user.uid)
       );
       const snap = await getDocs(q);
-      setEntries(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as unknown as DailyEntry));
+      const all = snap.docs.map((d) => ({ id: d.id, ...d.data() }) as unknown as DailyEntry);
+      setEntries(all.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30));
       setLoading(false);
     })();
   }, [user]);

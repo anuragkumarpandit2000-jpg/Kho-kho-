@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/firebase";
 import { analyzePlayer, generateSuggestions, identifyBestPerformer, identifyWeakPerformer } from "@/lib/analysis";
 import type { DailyEntry } from "@/lib/points";
@@ -26,11 +26,15 @@ export default function CoachDashboard() {
   useEffect(() => {
     (async () => {
       const [userSnap, trainSnap] = await Promise.all([
-        getDocs(query(collection(db, "users"), orderBy("totalScore", "desc"))),
-        getDocs(query(collection(db, "training"), orderBy("date", "desc"))),
+        getDocs(collection(db, "users")),
+        getDocs(collection(db, "training")),
       ]);
-      const usersData = userSnap.docs.map((d) => ({ uid: d.id, ...d.data() }) as FirestoreUser);
-      const entriesData = trainSnap.docs.map((d) => d.data() as DailyEntry);
+      const usersData = userSnap.docs
+        .map((d) => ({ uid: d.id, ...d.data() }) as FirestoreUser)
+        .sort((a, b) => b.totalScore - a.totalScore);
+      const entriesData = trainSnap.docs
+        .map((d) => d.data() as DailyEntry)
+        .sort((a, b) => b.date.localeCompare(a.date));
       setPlayers(usersData);
       setAllEntries(entriesData);
 

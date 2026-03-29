@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
@@ -26,8 +26,12 @@ export default function Leaderboard() {
 
   useEffect(() => {
     (async () => {
-      const snap = await getDocs(query(collection(db, "users"), orderBy("totalScore", "desc")));
-      setPlayers(snap.docs.map((d) => ({ uid: d.id, ...d.data() }) as LeaderboardPlayer));
+      const snap = await getDocs(collection(db, "users"));
+      setPlayers(
+        snap.docs
+          .map((d) => ({ uid: d.id, ...d.data() }) as LeaderboardPlayer)
+          .sort((a, b) => b.totalScore - a.totalScore)
+      );
       setLoading(false);
     })();
   }, []);

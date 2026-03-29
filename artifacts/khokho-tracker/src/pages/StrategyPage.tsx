@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebase";
 import { analyzePlayer } from "@/lib/analysis";
 import { suggestRole, suggestStrategy, getBestChaser, getBestRunner, STRATEGY_DETAILS } from "@/lib/strategy";
@@ -17,10 +17,12 @@ export default function StrategyPage() {
   useEffect(() => {
     (async () => {
       const [userSnap, trainSnap] = await Promise.all([
-        getDocs(query(collection(db, "users"), orderBy("totalScore", "desc"))),
+        getDocs(collection(db, "users")),
         getDocs(collection(db, "training")),
       ]);
-      const users = userSnap.docs.map((d) => ({ uid: d.id, ...d.data() }) as FirestoreUser);
+      const users = userSnap.docs
+        .map((d) => ({ uid: d.id, ...d.data() }) as FirestoreUser)
+        .sort((a, b) => b.totalScore - a.totalScore);
       const entries = trainSnap.docs.map((d) => d.data() as DailyEntry);
       const stats: PlayerStats[] = users.map((u) => {
         const pEntries = entries.filter((e) => e.uid === u.uid);

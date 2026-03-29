@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { collection, query, where, getDocs, orderBy, limit, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import type { DailyEntry } from "@/lib/points";
@@ -39,11 +39,21 @@ export default function MyProgress() {
   async function loadData() {
     if (!user) return;
     const [trainSnap, speedSnap] = await Promise.all([
-      getDocs(query(collection(db, "training"), where("uid", "==", user.uid), orderBy("date", "asc"), limit(30))),
-      getDocs(query(collection(db, "speed"), where("uid", "==", user.uid), orderBy("date", "asc"), limit(30))),
+      getDocs(query(collection(db, "training"), where("uid", "==", user.uid))),
+      getDocs(query(collection(db, "speed"), where("uid", "==", user.uid))),
     ]);
-    setEntries(trainSnap.docs.map((d) => d.data() as DailyEntry));
-    setSpeedEntries(speedSnap.docs.map((d) => d.data() as SpeedEntry));
+    setEntries(
+      trainSnap.docs
+        .map((d) => d.data() as DailyEntry)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(-30)
+    );
+    setSpeedEntries(
+      speedSnap.docs
+        .map((d) => d.data() as SpeedEntry)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(-30)
+    );
     setLoading(false);
   }
 
