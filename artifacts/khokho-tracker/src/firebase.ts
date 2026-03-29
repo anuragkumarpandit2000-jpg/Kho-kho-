@@ -2,21 +2,14 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
-// ⚠️  SETUP INSTRUCTIONS:
-// 1. Go to https://console.firebase.google.com
-// 2. Create a new project (or use existing)
-// 3. Go to Project Settings → General → Your apps → Add App (Web)
-// 4. Copy your config values below
-// 5. In Firebase Console → Authentication → Sign-in method → Enable "Email/Password"
-// 6. In Firebase Console → Firestore Database → Create database (Start in test mode)
-
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "YOUR_API_KEY",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "YOUR_AUTH_DOMAIN",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "YOUR_STORAGE_BUCKET",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "YOUR_MESSAGING_SENDER_ID",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "YOUR_APP_ID",
+  apiKey: "AIzaSyAfjbsTX3dsm49H--0UhNwzaQ05ynN8Mko",
+  authDomain: "kho-kho-tracker.firebaseapp.com",
+  projectId: "kho-kho-tracker",
+  storageBucket: "kho-kho-tracker.firebasestorage.app",
+  messagingSenderId: "1765682371",
+  appId: "1:1765682371:web:6d753adfbc4e7b1d794676",
+  measurementId: "G-TJLD83C38E",
 };
 
 const app = initializeApp(firebaseConfig);
