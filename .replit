@@ -26,14 +26,6 @@ author = "agent"
 task = "workflow.run"
 args = "Start application"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "API Server"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Kho-Kho Team Tracker"
-
 [[workflows.workflow]]
 name = "Start application"
 author = "agent"
@@ -45,30 +37,6 @@ outputType = "webview"
 task = "shell.exec"
 args = "PORT=18462 BASE_PATH=/ pnpm --filter @workspace/khokho-tracker run dev"
 waitForPort = 18462
-
-[[workflows.workflow]]
-name = "API Server"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=8080 pnpm --filter @workspace/api-server run dev"
-waitForPort = 8080
-
-[workflows.workflow.metadata]
-outputType = "console"
-
-[[workflows.workflow]]
-name = "Kho-Kho Team Tracker"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "PORT=18259 BASE_PATH=/kho-team-tracker/ pnpm --filter @workspace/kho-team-tracker run dev"
-waitForPort = 18259
-
-[workflows.workflow.metadata]
-outputType = "webview"
 
 [agent]
 stack = "PNPM_WORKSPACE"
