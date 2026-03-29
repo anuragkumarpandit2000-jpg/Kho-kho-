@@ -12,6 +12,7 @@ import ProfilePage from "./pages/profile";
 import TrainingPage from "./pages/training";
 import SpeedPage from "./pages/speed";
 import CoachDashboard from "./pages/coach-dashboard";
+import YourLevel from "./pages/your-level";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -33,6 +34,7 @@ function Router() {
         <Route path="/app/training" component={TrainingPage} />
         <Route path="/app/speed" component={SpeedPage} />
         <Route path="/app/coach" component={CoachDashboard} />
+        <Route path="/app/level" component={YourLevel} />
         <Route component={NotFound} />
       </Switch>
     </AppShell>

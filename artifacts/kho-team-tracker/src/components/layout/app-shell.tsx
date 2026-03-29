@@ -15,7 +15,7 @@ import {
   SidebarTrigger,
   SidebarFooter
 } from "@/components/ui/sidebar";
-import { Activity, Dumbbell, Timer, UserCircle, Users, LogOut, Shield, MapPin } from "lucide-react";
+import { Activity, Dumbbell, Timer, UserCircle, Users, LogOut, Shield, MapPin, BarChart2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -40,6 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { title: "My Profile", url: "/app/profile", icon: UserCircle },
     { title: "Training Log", url: "/app/training", icon: Dumbbell },
     { title: "Speed Tracker", url: "/app/speed", icon: Timer },
+    { title: "Your Level", url: "/app/level", icon: BarChart2 },
   ];
 
   return (
