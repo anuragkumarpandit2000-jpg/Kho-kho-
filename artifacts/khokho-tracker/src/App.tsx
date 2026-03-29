@@ -13,6 +13,7 @@ import MyProgress from "@/pages/MyProgress";
 import Leaderboard from "@/pages/Leaderboard";
 import CoachDashboard from "@/pages/CoachDashboard";
 import StrategyPage from "@/pages/StrategyPage";
+import ConsistencyTracker from "@/pages/ConsistencyTracker";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 1000 * 60 * 5, refetchOnWindowFocus: false } },
@@ -55,6 +56,7 @@ function AppRoutes() {
           <Route path="/strategy">
             <CoachGuard><StrategyPage /></CoachGuard>
           </Route>
+          <Route path="/consistency" component={ConsistencyTracker} />
           <Route>
             <Redirect to="/" />
           </Route>

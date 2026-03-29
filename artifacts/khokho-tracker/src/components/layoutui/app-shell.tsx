@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Activity, ClipboardList, TrendingUp, Trophy, Lightbulb,
-  Shield, LogOut, Menu, X, ChevronRight
+  Shield, LogOut, Menu, ChevronRight, CalendarDays
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { useState } from "react";
@@ -39,6 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { title: "Dashboard", url: "/", icon: Activity },
     { title: "Daily Entry", url: "/entry", icon: ClipboardList },
     { title: "My Progress", url: "/progress", icon: TrendingUp },
+    { title: "30-Day Tracker", url: "/consistency", icon: CalendarDays },
     { title: "Leaderboard", url: "/leaderboard", icon: Trophy },
   ];
 
@@ -46,6 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { title: "Dashboard", url: "/", icon: Activity },
     { title: "Daily Entry", url: "/entry", icon: ClipboardList },
     { title: "My Progress", url: "/progress", icon: TrendingUp },
+    { title: "30-Day Tracker", url: "/consistency", icon: CalendarDays },
     { title: "Leaderboard", url: "/leaderboard", icon: Trophy },
     { title: "Coach Dashboard", url: "/coach", icon: Shield },
     { title: "Strategy", url: "/strategy", icon: Lightbulb },
