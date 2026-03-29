@@ -12,7 +12,7 @@ import {
   SidebarProvider,
   SidebarTrigger
 } from "@/components/ui/sidebar";
-import { Activity, Users, Timer, Dumbbell, Trophy, Lightbulb, Menu, Shield } from "lucide-react";
+import { Activity, Users, Timer, Dumbbell, Trophy, Lightbulb, Menu, Shield, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -23,6 +23,7 @@ const NAV_ITEMS = [
   { title: "Training Logs", url: "/training", icon: Dumbbell },
   { title: "Match Analysis", url: "/matches", icon: Trophy },
   { title: "Strategy Gen", url: "/strategy", icon: Lightbulb },
+  { title: "Live Team", url: "/live-team", icon: Wifi },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {

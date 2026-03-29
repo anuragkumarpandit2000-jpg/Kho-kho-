@@ -1,107 +1,220 @@
-import { useAuth } from "@workspace/replit-auth-web";
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
-import { ArrowRight, Activity, Shield, Trophy } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Activity, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const loginSchema = z.object({
+  email: z.string().email("Enter a valid email"),
+  password: z.string().min(1, "Password is required"),
+});
+
+const signupSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+}).refine(d => d.password === d.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
+type SignupForm = z.infer<typeof signupSchema>;
+
+const BASE = import.meta.env.BASE_URL;
+
+async function apiPost(path: string, body: object) {
+  const res = await fetch(`${BASE}api/${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Something went wrong");
+  return data;
+}
+
+function PasswordInput({ id, placeholder, ...props }: React.ComponentProps<"input"> & { id: string }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <Input id={id} type={show ? "text" : "password"} placeholder={placeholder} className="pr-10" {...props} />
+      <button type="button" onClick={() => setShow(s => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+        {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+}
 
 export default function LandingPage() {
-  const { login } = useAuth();
+  const [tab, setTab] = useState<"login" | "signup">("login");
+  const [, navigate] = useLocation();
+
+  const loginForm = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+  const signupForm = useForm<SignupForm>({ resolver: zodResolver(signupSchema) });
+
+  const [loginError, setLoginError] = useState("");
+  const [signupError, setSignupError] = useState("");
+
+  async function handleLogin(data: LoginForm) {
+    setLoginError("");
+    try {
+      await apiPost("auth/login", data);
+      window.location.href = `${BASE}app`;
+    } catch (err: unknown) {
+      setLoginError(err instanceof Error ? err.message : "Login failed");
+    }
+  }
+
+  async function handleSignup(data: SignupForm) {
+    setSignupError("");
+    try {
+      await apiPost("auth/signup", { name: data.name, email: data.email, password: data.password });
+      window.location.href = `${BASE}app`;
+    } catch (err: unknown) {
+      setSignupError(err instanceof Error ? err.message : "Signup failed");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans">
-      <header className="flex items-center justify-between p-6 md:px-12 z-10">
+      <header className="flex items-center justify-between p-6 md:px-12">
         <div className="flex items-center gap-3">
           <div className="bg-primary p-2.5 rounded-xl text-primary-foreground shadow-lg shadow-primary/25">
             <Activity className="w-6 h-6" />
           </div>
           <span className="font-display font-bold text-2xl tracking-tight">KHO-KHO</span>
         </div>
-        <Button onClick={login} variant="ghost" className="font-bold text-base hover-elevate">
-          Sign In
-        </Button>
+        <span className="text-sm text-muted-foreground font-medium">Team Tracker</span>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center relative overflow-hidden px-4 py-20">
-        {/* Abstract Background Decoration */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent/10 rounded-full blur-[120px]" />
-        </div>
-
-        <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-2 gap-12 lg:gap-8 items-center z-10">
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="flex flex-col items-start text-left space-y-8"
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground text-sm font-semibold border border-border">
-              <Trophy className="w-4 h-4 text-primary" />
-              <span>For Champions. By Champions.</span>
-            </div>
-            
-            <h1 className="font-display text-5xl md:text-7xl font-extrabold leading-[1.1] tracking-tight">
-              Elevate Your <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Kho-Kho Game</span>
-            </h1>
-            
-            <p className="text-lg md:text-xl text-muted-foreground max-w-[480px] leading-relaxed">
-              The ultimate tracking platform for serious Kho-Kho teams. Monitor your speed, log daily training, and climb the team leaderboard.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              <Button 
-                onClick={login} 
-                size="lg" 
-                className="h-14 px-8 text-lg font-bold rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 shadow-xl shadow-primary/20 hover:shadow-2xl hover:shadow-primary/30 transition-all hover:-translate-y-1"
-              >
-                Join the Squad <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-display font-extrabold tracking-tight">
+                {tab === "login" ? "Welcome back!" : "Join the squad"}
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                {tab === "login"
+                  ? "Sign in to track your performance"
+                  : "Create your account and start training"}
+              </p>
             </div>
 
-            <div className="flex items-center gap-8 pt-4">
-              <div className="flex flex-col">
-                <span className="text-3xl font-display font-bold text-foreground">30d</span>
-                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Progress Tracking</span>
-              </div>
-              <div className="w-px h-12 bg-border"></div>
-              <div className="flex flex-col">
-                <span className="text-3xl font-display font-bold text-foreground">100%</span>
-                <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Coach Visibility</span>
-              </div>
+            <div className="flex rounded-xl bg-muted p-1 mb-6">
+              {(["login", "signup"] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setTab(t)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${tab === t ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {t === "login" ? "Sign In" : "Sign Up"}
+                </button>
+              ))}
             </div>
-          </motion.div>
 
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
-            className="relative w-full aspect-[4/3] lg:aspect-square"
-          >
-            <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-accent/20 rounded-3xl transform rotate-3 scale-105 border border-white/10 backdrop-blur-sm"></div>
-            <div className="absolute inset-0 bg-card rounded-3xl shadow-2xl border border-border/50 overflow-hidden flex items-center justify-center">
-              <img 
-                src={`${import.meta.env.BASE_URL}images/hero-bg.png`} 
-                alt="Kho-Kho Abstract Background" 
-                className="w-full h-full object-cover opacity-90"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent"></div>
-              
-              {/* Floating UI Elements over the image */}
-              <div className="absolute bottom-8 left-8 right-8 bg-background/80 backdrop-blur-md border border-border p-4 rounded-2xl flex items-center justify-between shadow-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                    <Shield className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-foreground">Coach Dashboard</p>
-                    <p className="text-xs text-muted-foreground">Real-time team analytics</p>
-                  </div>
-                </div>
-                <div className="px-3 py-1 bg-accent/20 text-accent font-bold rounded-full text-xs">
-                  Active
-                </div>
-              </div>
-            </div>
+            <AnimatePresence mode="wait">
+              {tab === "login" ? (
+                <motion.div key="login" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.2 }}>
+                  <Card className="border-border/50 shadow-xl">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg">Sign In</CardTitle>
+                      <CardDescription>Enter your email and password</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
+                        {loginError && (
+                          <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            {loginError}
+                          </div>
+                        )}
+                        <div className="space-y-1.5">
+                          <Label htmlFor="login-email">Email</Label>
+                          <Input id="login-email" type="email" placeholder="you@example.com" {...loginForm.register("email")} />
+                          {loginForm.formState.errors.email && <p className="text-xs text-destructive">{loginForm.formState.errors.email.message}</p>}
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="login-password">Password</Label>
+                          <PasswordInput id="login-password" placeholder="Your password" {...loginForm.register("password")} />
+                          {loginForm.formState.errors.password && <p className="text-xs text-destructive">{loginForm.formState.errors.password.message}</p>}
+                        </div>
+                        <Button type="submit" className="w-full font-bold" disabled={loginForm.formState.isSubmitting}>
+                          {loginForm.formState.isSubmitting ? "Signing in..." : "Sign In"}
+                        </Button>
+                        <p className="text-center text-sm text-muted-foreground pt-2">
+                          Don't have an account?{" "}
+                          <button type="button" onClick={() => setTab("signup")} className="text-primary font-semibold hover:underline">
+                            Sign Up
+                          </button>
+                        </p>
+                      </form>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ) : (
+                <motion.div key="signup" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }}>
+                  <Card className="border-border/50 shadow-xl">
+                    <CardHeader className="pb-4">
+                      <CardTitle className="text-lg">Create Account</CardTitle>
+                      <CardDescription>Fill in your details to get started</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
+                        {signupError && (
+                          <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+                            <AlertCircle className="w-4 h-4 shrink-0" />
+                            {signupError}
+                          </div>
+                        )}
+                        <div className="space-y-1.5">
+                          <Label htmlFor="signup-name">Full Name</Label>
+                          <Input id="signup-name" placeholder="Arjun Kumar" {...signupForm.register("name")} />
+                          {signupForm.formState.errors.name && <p className="text-xs text-destructive">{signupForm.formState.errors.name.message}</p>}
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="signup-email">Email</Label>
+                          <Input id="signup-email" type="email" placeholder="you@example.com" {...signupForm.register("email")} />
+                          {signupForm.formState.errors.email && <p className="text-xs text-destructive">{signupForm.formState.errors.email.message}</p>}
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="signup-password">Password</Label>
+                          <PasswordInput id="signup-password" placeholder="Min 6 characters" {...signupForm.register("password")} />
+                          {signupForm.formState.errors.password && <p className="text-xs text-destructive">{signupForm.formState.errors.password.message}</p>}
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="signup-confirm">Confirm Password</Label>
+                          <PasswordInput id="signup-confirm" placeholder="Repeat password" {...signupForm.register("confirmPassword")} />
+                          {signupForm.formState.errors.confirmPassword && <p className="text-xs text-destructive">{signupForm.formState.errors.confirmPassword.message}</p>}
+                        </div>
+                        <Button type="submit" className="w-full font-bold" disabled={signupForm.formState.isSubmitting}>
+                          {signupForm.formState.isSubmitting ? "Creating account..." : "Create Account"}
+                        </Button>
+                        <p className="text-center text-sm text-muted-foreground pt-2">
+                          Already have an account?{" "}
+                          <button type="button" onClick={() => setTab("login")} className="text-primary font-semibold hover:underline">
+                            Sign In
+                          </button>
+                        </p>
+                      </form>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
       </main>

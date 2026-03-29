@@ -5,6 +5,7 @@ import playersRouter from "./players";
 import trainingRouter from "./training";
 import speedRouter from "./speed";
 import coachRouter from "./coach";
+import publicRouter from "./public";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(playersRouter);
 router.use(trainingRouter);
 router.use(speedRouter);
 router.use(coachRouter);
+router.use(publicRouter);
 
 export default router;
