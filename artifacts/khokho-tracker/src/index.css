@@ -294,3 +294,13 @@
     box-shadow: 0 0 20px -5px hsl(var(--accent) / 0.5);
   }
 }
+
+/* Hide Replit watermark badge */
+iframe[src*="replit"],
+[data-replit-badge],
+a[href*="replit.com/badge"],
+div[class*="replit-ui-theme-root"] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
