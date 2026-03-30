@@ -37,6 +37,25 @@ function Slider({ value, onChange, min, max, label }: { value: number; onChange:
   );
 }
 
+// Number input that shows blank when value is 0
+function NumberInput({ value, onChange, label, pts }: { value: number; onChange: (v: number) => void; label: string; pts?: string }) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-muted-foreground mb-1.5">
+        {label} {pts && <span className="text-primary font-black">{pts}</span>}
+      </label>
+      <input
+        type="number"
+        min={0}
+        value={value === 0 ? "" : value}
+        placeholder="0"
+        onChange={(e) => onChange(e.target.value === "" ? 0 : Number(e.target.value))}
+        className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
+      />
+    </div>
+  );
+}
+
 export default function DailyEntry() {
   const { user, refreshUser } = useAuth();
   const today = new Date().toISOString().split("T")[0];
@@ -55,6 +74,12 @@ export default function DailyEntry() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
+
+  function resetForm() {
+    setRunning(0); setSprintRounds(0); setSkillPracticed(""); setMatchPlayed(false);
+    setFoulsCommitted(0); setEnergyLevel(7); setSleepHours(8); setExercise("");
+    setExerciseDuration(0); setPracticeAtHome(false); setNotes("");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -99,7 +124,7 @@ export default function DailyEntry() {
           </div>
           <p className="mt-4 text-base font-semibold text-foreground">{getMotivationalMessage(score)}</p>
           <button
-            onClick={() => { setSubmitted(false); setRunning(0); setSprintRounds(0); setSkillPracticed(""); setMatchPlayed(false); setFoulsCommitted(0); setEnergyLevel(7); setSleepHours(8); setExercise(""); setExerciseDuration(0); setPracticeAtHome(false); setNotes(""); }}
+            onClick={() => { setSubmitted(false); resetForm(); }}
             className="mt-6 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold hover:opacity-90 transition"
           >
             Log Another Entry
@@ -130,16 +155,8 @@ export default function DailyEntry() {
             <h3 className="text-base font-black uppercase tracking-wider text-primary">🏃 Training Activity</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold text-muted-foreground mb-1.5">Running (minutes) <span className="text-primary font-black">+5 pts</span></label>
-                <input type="number" min={0} value={running} onChange={(e) => setRunning(Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-muted-foreground mb-1.5">Sprint Rounds <span className="text-primary font-black">+5 pts</span></label>
-                <input type="number" min={0} value={sprintRounds} onChange={(e) => setSprintRounds(Number(e.target.value))}
-                  className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition" />
-              </div>
+              <NumberInput value={running} onChange={setRunning} label="Running (minutes)" pts="+5 pts" />
+              <NumberInput value={sprintRounds} onChange={setSprintRounds} label="Sprint Rounds" pts="+5 pts" />
             </div>
 
             <div>
@@ -156,22 +173,14 @@ export default function DailyEntry() {
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition" />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-muted-foreground mb-1.5">Exercise Duration (minutes)</label>
-              <input type="number" min={0} value={exerciseDuration} onChange={(e) => setExerciseDuration(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition" />
-            </div>
+            <NumberInput value={exerciseDuration} onChange={setExerciseDuration} label="Exercise Duration (minutes)" />
 
             <div className="space-y-4">
-              <Toggle value={matchPlayed} onChange={setMatchPlayed} label={`Match Played today? (+5 pts)`} />
-              <Toggle value={practiceAtHome} onChange={setPracticeAtHome} label={`Practiced at home? (+5 pts)`} />
+              <Toggle value={matchPlayed} onChange={setMatchPlayed} label="Match Played today? (+5 pts)" />
+              <Toggle value={practiceAtHome} onChange={setPracticeAtHome} label="Practiced at home? (+5 pts)" />
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-muted-foreground mb-1.5">Fouls Committed</label>
-              <input type="number" min={0} value={foulsCommitted} onChange={(e) => setFoulsCommitted(Number(e.target.value))}
-                className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition" />
-            </div>
+            <NumberInput value={foulsCommitted} onChange={setFoulsCommitted} label="Fouls Committed" />
           </div>
 
           <div className="bg-card border border-border/50 rounded-2xl p-6 space-y-6 shadow-sm">

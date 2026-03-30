@@ -1,29 +1,32 @@
 import { useEffect, useState, useCallback } from "react";
-import { collection, query, where, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "@/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import type { DailyEntry } from "@/lib/points";
 import { motion, AnimatePresence } from "framer-motion";
 import { Trophy, CalendarDays, TrendingUp, CheckCircle, XCircle, Flame, Shield } from "lucide-react";
 
-const YEAR = 2026;
-const MONTH = 4; // April
-const TOTAL_DAYS = 30;
-
-function pad(n: number) {
-  return String(n).padStart(2, "0");
+// ─── Date range: March 30 → April 27, 2026 ──────────────────────────────────
+function buildDays() {
+  const days: { date: string; label: string }[] = [];
+  // March 30–31
+  for (let d = 30; d <= 31; d++) {
+    days.push({ date: `2026-03-${String(d).padStart(2, "0")}`, label: `${d} Mar` });
+  }
+  // April 1–27
+  for (let d = 1; d <= 27; d++) {
+    days.push({ date: `2026-04-${String(d).padStart(2, "0")}`, label: `${d} Apr` });
+  }
+  return days; // 29 days total, last = April 27
 }
-
-function dateKey(day: number) {
-  return `${YEAR}-${pad(MONTH)}-${pad(day)}`;
-}
+const DAYS = buildDays();
+const LAST_IDX = DAYS.length - 1; // index 28 = April 27 → trophy
 
 type DayStatus = "completed" | "missed" | "";
 
 interface DayData {
   status: DayStatus;
   isGood: boolean;
-  hasEntry: boolean;
 }
 
 function isGoodPerformance(entry: DailyEntry | undefined): boolean {
@@ -37,12 +40,15 @@ function getConsistencyMsg(pct: number) {
   return { text: "Needs improvement ⚠️", color: "text-red-500", bg: "bg-red-500/10 border-red-500/20" };
 }
 
-function DayBox({
-  day, data, isToday, isFuture, onClick,
-}: {
-  day: number; data: DayData; isToday: boolean; isFuture: boolean; onClick: () => void;
+function DayBox({ idx, dayInfo, data, isToday, isFuture, onClick }: {
+  idx: number;
+  dayInfo: { date: string; label: string };
+  data: DayData;
+  isToday: boolean;
+  isFuture: boolean;
+  onClick: () => void;
 }) {
-  const isTrophy = day === 30;
+  const isTrophy = idx === LAST_IDX;
 
   let bgClass = "bg-secondary/40 border-border/40 hover:border-border";
   let textClass = "text-muted-foreground";
@@ -51,11 +57,11 @@ function DayBox({
   if (data.status === "completed") {
     bgClass = "bg-green-500/15 border-green-500/40 shadow-green-500/10 shadow-md";
     textClass = "text-green-600 dark:text-green-400";
-    icon = <CheckCircle className="w-5 h-5 text-green-500" />;
+    icon = <CheckCircle className="w-4 h-4 text-green-500" />;
   } else if (data.status === "missed") {
     bgClass = "bg-red-500/15 border-red-500/40 shadow-red-500/10 shadow-md";
     textClass = "text-red-500";
-    icon = <XCircle className="w-5 h-5 text-red-500" />;
+    icon = <XCircle className="w-4 h-4 text-red-500" />;
   }
 
   if (isToday && data.status === "") {
@@ -63,35 +69,37 @@ function DayBox({
     textClass = "text-primary font-black";
   }
 
+  const [datePart, month] = dayInfo.label.split(" ");
+
   return (
     <motion.button
-      whileHover={!isFuture ? { scale: 1.06, y: -2 } : {}}
-      whileTap={!isFuture ? { scale: 0.95 } : {}}
+      whileHover={!isFuture ? { scale: 1.08, y: -2 } : {}}
+      whileTap={!isFuture ? { scale: 0.94 } : {}}
       onClick={!isFuture ? onClick : undefined}
       disabled={isFuture}
-      className={`relative flex flex-col items-center justify-center gap-1 rounded-2xl border-2 transition-all duration-200 aspect-square
+      className={`relative flex flex-col items-center justify-center gap-0.5 rounded-2xl border-2 transition-all duration-200 aspect-square
         ${bgClass} ${isFuture ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
     >
-      <span className={`text-xs font-bold ${textClass}`}>{day}</span>
-      {isTrophy && data.status !== "completed" && data.status !== "missed" ? (
-        <Trophy className={`w-5 h-5 ${isToday ? "text-primary" : "text-muted-foreground/50"}`} />
+      <span className={`text-sm font-black leading-none ${textClass}`}>{datePart}</span>
+      <span className={`text-[9px] font-bold uppercase tracking-wider ${textClass} opacity-70`}>{month}</span>
+
+      {isTrophy && data.status === "" ? (
+        <Trophy className={`w-4 h-4 mt-0.5 ${isToday ? "text-primary" : "text-yellow-500"}`} />
       ) : icon ? (
-        icon
-      ) : (
-        <span className="text-xs text-muted-foreground/40">Apr</span>
-      )}
+        <div className="mt-0.5">{icon}</div>
+      ) : null}
+
       {isToday && (
-        <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary rounded-full animate-pulse" />
+        <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary rounded-full animate-pulse border-2 border-background" />
       )}
     </motion.button>
   );
 }
 
-// ─── Main page ──────────────────────────────────────────────────────────────
+// ─── Main export ─────────────────────────────────────────────────────────────
 
 export default function ConsistencyTracker() {
   const { user } = useAuth();
-
   return (
     <div className="space-y-12">
       <PlayerView />
@@ -100,73 +108,62 @@ export default function ConsistencyTracker() {
   );
 }
 
+// ─── Player view ──────────────────────────────────────────────────────────────
+
 function PlayerView() {
   const { user } = useAuth();
-  const [days, setDays] = useState<Record<number, DayData>>({});
+  const [days, setDays] = useState<Record<string, DayData>>({});
   const [loading, setLoading] = useState(true);
-  const today = new Date();
-  const todayDay = today.getMonth() + 1 === MONTH && today.getFullYear() === YEAR ? today.getDate() : -1;
+
+  const todayStr = new Date().toISOString().split("T")[0];
 
   const loadData = useCallback(async () => {
     if (!user) return;
-    // Load training entries for April
-    const trainSnap = await getDocs(
-      query(collection(db, "training"), where("uid", "==", user.uid))
-    );
+
+    const trainSnap = await getDocs(collection(db, "training"));
     const entries: Record<string, DailyEntry> = {};
     trainSnap.docs.forEach((d) => {
       const e = d.data() as DailyEntry;
-      entries[e.date] = e;
+      if (e.uid === user.uid) entries[e.date] = e;
     });
 
-    // Load saved consistency statuses
     const conRef = doc(db, "consistency", user.uid);
     const conSnap = await getDoc(conRef);
-    const saved: Record<string, DayStatus> = conSnap.exists() ? conSnap.data() as Record<string, DayStatus> : {};
+    const saved: Record<string, DayStatus> = conSnap.exists() ? (conSnap.data() as Record<string, DayStatus>) : {};
 
-    const result: Record<number, DayData> = {};
-    for (let d = 1; d <= TOTAL_DAYS; d++) {
-      const key = dateKey(d);
-      const entry = entries[key];
-      const good = isGoodPerformance(entry);
-      result[d] = {
-        status: saved[key] ?? "",
-        isGood: good,
-        hasEntry: !!entry,
+    const result: Record<string, DayData> = {};
+    DAYS.forEach(({ date }) => {
+      result[date] = {
+        status: saved[date] ?? "",
+        isGood: isGoodPerformance(entries[date]),
       };
-    }
+    });
     setDays(result);
     setLoading(false);
   }, [user]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  async function handleClick(day: number) {
+  async function handleClick(date: string) {
     if (!user) return;
-    const d = days[day];
+    const d = days[date];
     let next: DayStatus;
 
     if (d.isGood) {
-      // Good: grey → completed → missed → grey
       if (d.status === "") next = "completed";
       else if (d.status === "completed") next = "missed";
       else next = "";
     } else {
-      // Poor: grey → missed → grey
       if (d.status === "") next = "missed";
       else next = "";
     }
 
-    const updated = { ...days, [day]: { ...d, status: next } };
+    const updated = { ...days, [date]: { ...d, status: next } };
     setDays(updated);
 
-    // Save to Firestore
-    const conRef = doc(db, "consistency", user.uid);
     const saveData: Record<string, DayStatus> = {};
-    Object.entries(updated).forEach(([k, v]) => {
-      saveData[dateKey(Number(k))] = v.status;
-    });
-    await setDoc(conRef, saveData, { merge: true });
+    Object.entries(updated).forEach(([k, v]) => { saveData[k] = v.status; });
+    await setDoc(doc(db, "consistency", user.uid), saveData, { merge: true });
   }
 
   const completedDays = Object.values(days).filter((d) => d.status === "completed").length;
@@ -179,24 +176,24 @@ function PlayerView() {
     return (
       <div className="space-y-4">
         <div className="h-10 w-64 bg-card rounded-xl animate-pulse" />
-        <div className="grid grid-cols-6 gap-3">
-          {[...Array(30)].map((_, i) => <div key={i} className="aspect-square bg-card rounded-2xl animate-pulse" />)}
+        <div className="grid grid-cols-6 gap-2">
+          {[...Array(29)].map((_, i) => <div key={i} className="aspect-square bg-card rounded-2xl animate-pulse" />)}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-7 pb-10">
       {/* Header */}
       <div>
         <h1 className="text-4xl font-black text-foreground flex items-center gap-3">
           <CalendarDays className="text-primary" /> 30-Day Tracker
         </h1>
-        <p className="text-muted-foreground mt-2">April 2026 — Click each day to mark your training status.</p>
+        <p className="text-muted-foreground mt-2">Mar 30 – Apr 27, 2026 — Tap each day to mark your training.</p>
       </div>
 
-      {/* Stats Row */}
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 text-center">
           <p className="text-3xl font-black text-green-500">{completedDays}</p>
@@ -216,62 +213,59 @@ function PlayerView() {
       <div className="bg-card border border-border/50 rounded-2xl p-5 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-bold text-foreground flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" /> April Progress
+            <TrendingUp className="w-4 h-4 text-primary" /> Progress
           </span>
-          <span className="text-sm font-black text-primary">{completedDays} / {TOTAL_DAYS} days</span>
+          <span className="text-sm font-black text-primary">{completedDays} / {DAYS.length} days</span>
         </div>
         <div className="h-3 bg-secondary rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${(completedDays / TOTAL_DAYS) * 100}%` }}
+            animate={{ width: `${(completedDays / DAYS.length) * 100}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="h-full bg-gradient-to-r from-primary to-green-500 rounded-full"
           />
         </div>
-
-        {markedDays > 0 && (
-          <AnimatePresence>
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`flex items-center gap-3 rounded-xl px-4 py-2.5 border ${msg.bg}`}
-            >
+        <AnimatePresence>
+          {markedDays > 0 && (
+            <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              className={`flex items-center gap-3 rounded-xl px-4 py-2.5 border ${msg.bg}`}>
               <Flame className={`w-4 h-4 ${msg.color}`} />
               <span className={`text-sm font-bold ${msg.color}`}>{msg.text}</span>
             </motion.div>
-          </AnimatePresence>
-        )}
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs font-semibold text-muted-foreground">
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-500/50 inline-block" /> Completed (Good performance)</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-500/50 inline-block" /> Missed / Poor performance</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-secondary inline-block border border-border" /> Not marked</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-green-500/50 inline-block" /> Completed</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-red-500/50 inline-block" /> Missed</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-secondary inline-block border border-border" /> Unmarked</span>
         <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-primary inline-block" /> Today</span>
+        <span className="flex items-center gap-1.5"><Trophy className="w-3 h-3 text-yellow-500" /> Goal day</span>
       </div>
 
-      {/* 30-Day Grid */}
-      <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm">
-        <div className="grid grid-cols-6 gap-3">
-          {[...Array(TOTAL_DAYS)].map((_, i) => {
-            const day = i + 1;
-            const isFuture = todayDay > 0 && day > todayDay;
+      {/* Grid */}
+      <div className="bg-card border border-border/50 rounded-2xl p-4 shadow-sm">
+        <div className="grid grid-cols-6 gap-2">
+          {DAYS.map((dayInfo, idx) => {
+            const isFuture = dayInfo.date > todayStr;
             return (
               <DayBox
-                key={day}
-                day={day}
-                data={days[day] ?? { status: "", isGood: false, hasEntry: false }}
-                isToday={day === todayDay}
+                key={dayInfo.date}
+                idx={idx}
+                dayInfo={dayInfo}
+                data={days[dayInfo.date] ?? { status: "", isGood: false }}
+                isToday={dayInfo.date === todayStr}
                 isFuture={isFuture}
-                onClick={() => handleClick(day)}
+                onClick={() => handleClick(dayInfo.date)}
               />
             );
           })}
         </div>
       </div>
 
-      {/* Performance Conditions Reminder */}
+      {/* Performance conditions */}
       <div className="bg-card border border-border/50 rounded-2xl p-5 shadow-sm">
         <h3 className="font-black text-foreground mb-3 text-sm uppercase tracking-wider">✅ Good Performance = </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -290,14 +284,14 @@ function PlayerView() {
           ))}
         </div>
         <p className="text-xs text-muted-foreground mt-3">
-          Days with <strong>good performance data</strong> can be marked ✅ or ❌. Days with poor/no data can only be marked ❌.
+          Good performance days: tap to cycle ✅ → ❌ → blank. Poor/no data: tap to mark ❌ → blank only.
         </p>
       </div>
     </div>
   );
 }
 
-// ─── Coach view — see all players' trackers ─────────────────────────────────
+// ─── Coach view ───────────────────────────────────────────────────────────────
 
 function CoachView() {
   const [playerData, setPlayerData] = useState<
@@ -311,16 +305,14 @@ function CoachView() {
         getDocs(collection(db, "users")),
         getDocs(collection(db, "consistency")),
       ]);
-
       const users = userSnap.docs.map((d) => ({ uid: d.id, name: (d.data() as { name: string }).name }));
       const conMap: Record<string, Record<string, DayStatus>> = {};
       conSnap.docs.forEach((d) => { conMap[d.id] = d.data() as Record<string, DayStatus>; });
 
       const result = users.map((u) => {
         const con = conMap[u.uid] ?? {};
-        const vals = Object.values(con);
-        const completed = vals.filter((v) => v === "completed").length;
-        const missed = vals.filter((v) => v === "missed").length;
+        const completed = Object.values(con).filter((v) => v === "completed").length;
+        const missed = Object.values(con).filter((v) => v === "missed").length;
         const total = completed + missed;
         const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
         return { uid: u.uid, name: u.name, completed, missed, pct };
@@ -331,41 +323,29 @@ function CoachView() {
     })();
   }, []);
 
-  if (loading) {
-    return <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-card rounded-2xl animate-pulse" />)}</div>;
-  }
+  if (loading) return <div className="space-y-3">{[...Array(5)].map((_, i) => <div key={i} className="h-16 bg-card rounded-2xl animate-pulse" />)}</div>;
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-6 pb-10">
       <div className="border-t border-border/50 pt-8">
         <h2 className="text-2xl font-black text-foreground flex items-center gap-3">
-          <Shield className="text-primary w-6 h-6" /> All Players' April Trackers
+          <Shield className="text-primary w-6 h-6" /> All Players — April Consistency
         </h2>
-        <p className="text-muted-foreground mt-1 text-sm">Coach view — consistency rankings for all players.</p>
+        <p className="text-muted-foreground mt-1 text-sm">Coach view — Mar 30 to Apr 27, 2026.</p>
       </div>
 
       {playerData.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
+        <div className="text-center py-16 text-muted-foreground">
           <CalendarDays className="w-12 h-12 mx-auto mb-4 opacity-30" />
           <p className="text-xl font-bold">No data yet</p>
-          <p className="text-sm mt-2">Players need to start marking their tracker.</p>
         </div>
       ) : (
         <div className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-border/50">
-            <h3 className="font-black text-foreground">April 2026 — Consistency Rankings</h3>
-          </div>
           <div className="divide-y divide-border/30">
             {playerData.map((p, i) => {
               const msg = getConsistencyMsg(p.pct);
               return (
-                <motion.div
-                  key={p.uid}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className="px-6 py-4"
-                >
+                <motion.div key={p.uid} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="px-6 py-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <span className="w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-black flex items-center justify-center">{i + 1}</span>
@@ -378,10 +358,8 @@ function CoachView() {
                     </div>
                   </div>
                   <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary to-green-500 rounded-full transition-all duration-700"
-                      style={{ width: `${(p.completed / TOTAL_DAYS) * 100}%` }}
-                    />
+                    <div className="h-full bg-gradient-to-r from-primary to-green-500 rounded-full transition-all duration-700"
+                      style={{ width: `${(p.completed / DAYS.length) * 100}%` }} />
                   </div>
                   <p className={`text-xs font-semibold mt-1.5 ${msg.color}`}>{msg.text}</p>
                 </motion.div>
