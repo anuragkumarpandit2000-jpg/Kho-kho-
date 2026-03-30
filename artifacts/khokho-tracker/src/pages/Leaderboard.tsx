@@ -10,6 +10,8 @@ interface LeaderboardPlayer {
   name: string;
   totalScore: number;
   email?: string;
+  specialty?: string;
+  photoBase64?: string;
 }
 
 const MEDALS = ["🥇", "🥈", "🥉"];
@@ -70,10 +72,20 @@ export default function Leaderboard() {
                 className={`bg-gradient-to-b ${MEDAL_COLORS[i]} border rounded-2xl p-6 text-center shadow-md ${i === 0 ? "sm:order-2" : i === 1 ? "sm:order-1" : "sm:order-3"}`}
               >
                 <p className="text-4xl mb-2">{MEDALS[i]}</p>
+                <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/30 mx-auto mb-2">
+                  {p.photoBase64 ? (
+                    <img src={p.photoBase64} alt={p.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                      <span className="text-primary font-black text-lg">{p.name[0]}</span>
+                    </div>
+                  )}
+                </div>
                 <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider">#{i + 1}</p>
                 <p className={`text-xl font-black text-foreground mt-1 ${p.uid === user?.uid ? "text-primary" : ""}`}>
                   {p.name} {p.uid === user?.uid ? "(You)" : ""}
                 </p>
+                {p.specialty && <p className="text-xs text-yellow-500 font-bold mt-1">⭐ {p.specialty}</p>}
                 <p className="text-3xl font-black text-foreground mt-3">{p.totalScore}</p>
                 <p className="text-xs text-muted-foreground font-semibold">Total Points</p>
               </motion.div>
@@ -96,14 +108,24 @@ export default function Leaderboard() {
                     transition={{ delay: i * 0.04 }}
                     className={`flex items-center justify-between px-6 py-4 hover:bg-secondary/30 transition ${p.uid === user?.uid ? "bg-primary/5" : ""}`}
                   >
-                    <div className="flex items-center gap-4">
-                      <span className="w-8 text-sm font-black text-muted-foreground text-center">
+                    <div className="flex items-center gap-3">
+                      <span className="w-8 text-sm font-black text-muted-foreground text-center flex-shrink-0">
                         {i < 3 ? MEDALS[i] : `#${i + 1}`}
                       </span>
+                      <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0 border border-border/40">
+                        {p.photoBase64 ? (
+                          <img src={p.photoBase64} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                            <span className="text-primary font-black text-xs">{p.name[0]}</span>
+                          </div>
+                        )}
+                      </div>
                       <div>
                         <p className={`font-bold text-foreground ${p.uid === user?.uid ? "text-primary" : ""}`}>
                           {p.name} {p.uid === user?.uid ? "(You)" : ""}
                         </p>
+                        {p.specialty && <p className="text-xs text-yellow-500 font-semibold">⭐ {p.specialty}</p>}
                       </div>
                     </div>
                     <div className="text-right">

@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Activity, ClipboardList, TrendingUp, Trophy, Lightbulb,
-  Shield, LogOut, Menu, ChevronRight, CalendarDays
+  Shield, LogOut, Menu, ChevronRight, CalendarDays, UserCog
 } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { useState } from "react";
@@ -68,17 +68,33 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       {user && (
-        <div className="px-4 py-4 border-b border-border/30">
-          <div className="flex items-center gap-3 bg-secondary/40 rounded-xl px-3 py-2.5">
-            <div className="w-9 h-9 bg-primary/20 rounded-full flex items-center justify-center flex-shrink-0">
-              <span className="text-primary font-black text-sm">{user.name[0].toUpperCase()}</span>
+        <Link href="/profile">
+          <button
+            onClick={onNavClick}
+            className={`w-full px-4 py-3 border-b border-border/30 hover:bg-secondary/30 transition text-left ${location === "/profile" ? "bg-primary/5" : ""}`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-border/50">
+                {user.photoBase64 ? (
+                  <img src={user.photoBase64} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-primary font-black text-sm">{user.name[0]?.toUpperCase()}</span>
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-foreground truncate">{user.name}</p>
+                {user.specialty ? (
+                  <p className="text-xs text-yellow-500 font-semibold truncate">⭐ {user.specialty}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground font-semibold">{user.isCoach ? "🛡️ Coach" : `${user.totalScore} pts`}</p>
+                )}
+              </div>
+              <UserCog className="w-4 h-4 text-muted-foreground flex-shrink-0" />
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-bold text-foreground truncate">{user.name}</p>
-              <p className="text-xs text-muted-foreground font-semibold">{user.isCoach ? "🛡️ Coach" : `⭐ ${user.totalScore} pts`}</p>
-            </div>
-          </div>
-        </div>
+          </button>
+        </Link>
       )}
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
@@ -93,7 +109,19 @@ export function AppShell({ children }: { children: ReactNode }) {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-border/30">
+      <div className="p-4 border-t border-border/30 space-y-1">
+        <Link href="/profile">
+          <button
+            onClick={onNavClick}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+              location === "/profile"
+                ? "bg-primary/15 text-primary"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+            }`}
+          >
+            <UserCog className="w-4 h-4" /> Edit Profile
+          </button>
+        </Link>
         <button
           onClick={logout}
           className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all text-sm font-semibold"

@@ -15,6 +15,8 @@ interface AuthUser {
   name: string;
   isCoach: boolean;
   totalScore: number;
+  specialty?: string;
+  photoBase64?: string;
 }
 
 interface AuthContextType {
@@ -44,6 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: data?.name || fbUser.email?.split("@")[0] || "Player",
       isCoach: fbUser.email === COACH_EMAIL,
       totalScore: data?.totalScore || 0,
+      specialty: data?.specialty || "",
+      photoBase64: data?.photoBase64 || "",
     });
   }
 
@@ -70,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name,
       email,
       totalScore: 0,
+      specialty: "",
+      photoBase64: "",
       createdAt: serverTimestamp(),
     });
   }
