@@ -9,7 +9,7 @@ import type { PlayerStats } from "@/lib/analysis";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, Users, TrendingUp, AlertTriangle, Star, ChevronDown, ChevronUp,
-  Trash2, RefreshCw, Plus, Minus, CheckCircle, RotateCcw
+  Trash2, RefreshCw, Plus, Minus, CheckCircle, RotateCcw, Pencil
 } from "lucide-react";
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement,
@@ -29,6 +29,8 @@ export default function CoachDashboard() {
   const [loading, setLoading] = useState(true);
   const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null);
   const [pointsInput, setPointsInput] = useState<Record<string, string>>({});
+  const [renameInput, setRenameInput] = useState<Record<string, string>>({});
+  const [savingName, setSavingName] = useState<string | null>(null);
   const [resetting, setResetting] = useState(false);
   const [resetConfirm, setResetConfirm] = useState(false);
   const [deletingEntry, setDeletingEntry] = useState<string | null>(null);
@@ -90,6 +92,24 @@ export default function CoachDashboard() {
     setSavingPoints(null);
     setPointsInput((prev) => ({ ...prev, [uid]: "" }));
     showFeedback(`✅ ${player?.name}'s points updated to ${newScore}`);
+    await loadData();
+  }
+
+  // Rename a player
+  async function renamePlayer(uid: string) {
+    const newName = renameInput[uid]?.trim();
+    if (!newName) return;
+    setSavingName(uid);
+    const batch = writeBatch(db);
+    batch.update(doc(db, "users", uid), { name: newName });
+    // Update name on all training entries for this player
+    allEntries.filter((e) => e.uid === uid).forEach((e) => {
+      batch.update(doc(db, "training", e.docId), { name: newName });
+    });
+    await batch.commit();
+    setSavingName(null);
+    setRenameInput((prev) => ({ ...prev, [uid]: "" }));
+    showFeedback(`✅ Name changed to "${newName}"`);
     await loadData();
   }
 
@@ -334,6 +354,30 @@ export default function CoachDashboard() {
                               <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
                             </div>
                           ))}
+                        </div>
+
+                        {/* Rename Player */}
+                        <div className="bg-card border border-border/40 rounded-xl p-4 space-y-3">
+                          <p className="text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+                            <Pencil className="w-3 h-3" /> Rename Player
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={renameInput[p.uid] || ""}
+                              onChange={(e) => setRenameInput((prev) => ({ ...prev, [p.uid]: e.target.value }))}
+                              placeholder={`Current: ${p.name}`}
+                              className="flex-1 bg-secondary/50 border border-border/50 rounded-lg px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/50"
+                            />
+                            <button
+                              onClick={() => renamePlayer(p.uid)}
+                              disabled={savingName === p.uid || !renameInput[p.uid]?.trim()}
+                              className="flex items-center gap-1 px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg text-sm font-bold hover:bg-primary/20 transition disabled:opacity-40"
+                            >
+                              {savingName === p.uid ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                              Save
+                            </button>
+                          </div>
                         </div>
 
                         {/* Points Control */}
